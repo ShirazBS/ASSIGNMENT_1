@@ -5,3 +5,4 @@ The objective of this warm-up assignment is to brush up your programming and dat
 ### Please create a fork of this repository, and then make branches of that fork in your studygroup.
 When ready to begin, please start by reading through the html to get an overview of the assignment.
 
+hej med dig
