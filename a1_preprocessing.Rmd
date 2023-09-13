@@ -238,7 +238,22 @@ A possible way to do so:
 
 
 ```{r add_first_visit_variables}
-### Write your code here
+
+# Step 1: Create a new data set with only first visits
+first_visit_data <- asd_df %>% 
+  filter(visit == 1) %>% 
+    select(subject, ADOS, nonVerbalIQ, verbalIQ, Socialization)
+
+# Step 2: Rename the clinical variables to indicate the first visit
+first_visit_data <- first_visit_data %>% 
+  rename(ADOS1 = ADOS,
+         nonVerbalIQ1 = nonVerbalIQ,
+         verbalIQ1 = verbalIQ,
+         Socialization1 = Socialization)
+
+# Step 3: Merge the new data set with the old data
+merged_data <- asd_df %>% 
+  left_join(first_visit_data, by = "subject")
 
 
   
