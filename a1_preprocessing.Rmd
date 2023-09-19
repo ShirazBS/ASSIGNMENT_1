@@ -73,6 +73,12 @@ If you have created a Rstudio project for this assignment, the working directory
 
 ```{r setup}
 ### Write your code here
+setwd("~/Library/CloudStorage/OneDrive-Aarhusuniversitet/AU/Assignment 1 - Semester 3")
+
+
+library(tidyverse)
+library(dplyr)
+
 
 
 ```
@@ -85,7 +91,9 @@ Load the following three data sets, after downloading them from dropbox and savi
 
 ```{r import_datasets, message = FALSE}
 ### Write your code here
-
+demo_train <- read_csv("demo_train.csv")
+LU_train <- read_csv("LU_train.csv")
+token_train <- read_csv("token_train.csv")
 
 ```
 
@@ -111,8 +119,15 @@ Many different procedures can be used here, and unless you have to deal with gig
 
 
 ```{r rename_variables}
-### Write your code here
+# renaming all IDs to subject
+demo_train <- rename(demo_train, subject = Child.ID)
+LU_train <- rename(LU_train, subject = SUBJ)
+token_train <- rename(token_train, subject = SUBJ)
 
+# renaming all Visits to visit
+demo_train <- rename(demo_train, visit = Visit)
+LU_train <- rename(LU_train, visit = VISIT)
+token_train <- rename(token_train, visit = VISIT)
 
 ```
 
@@ -122,8 +137,9 @@ Find a way to homogenize the way "visit" is reported amongst the different datas
 
 
 ```{r extract_digits}
-### Write your code here
-
+### extracting the visit number from data sets LU_train
+LU_train$visit <- str_extract(LU_train$visit, "\\d")
+token_train$visit <- str_extract(token_train$visit, "\\d")
 
 ```
 
@@ -134,8 +150,9 @@ A similar task needs to be done regarding the value names of the Child.ID variab
 
 ```{r remove_points}
 ### Write your code here
-
-
+demo_train$subject <- str_replace_all(demo_train$subject, "[.]","")
+LU_train$subject <- str_replace_all(LU_train$subject, "[.]","")
+token_train$subject <- str_replace_all(token_train$subject, "[.]","")
 ```
 
 
@@ -175,9 +192,21 @@ Most variables names should make sense, that is, should be straightforward as re
 Feel free to rename the variables into something you think is more intuitive (i.e. *nonVerbalIQ*, *verbalIQ*)
 
 ```{r rename_selected_variables}
-### Write your code here
+# removing unnecessary columns in demo_train
+demo_train <- demo_train %>%
+        select(subject, visit, Diagnosis, Ethnicity, Gender, Age, ADOS, MullenRaw, ExpressiveLangRaw, Socialization)
 
+#renaming columns 
+demo_train <- rename(demo_train, nonVerbalIQ = MullenRaw)
+demo_train <- rename(demo_train, verbalIQ = ExpressiveLangRaw)
 
+# removing unnecessary columns in LU_train
+LU_train <- LU_train %>%
+        select(subject, visit, MOT_MLU, CHI_MLU)
+
+# removing unnecessary columns in token_train
+token_train <- token_train %>%
+        select(subject, visit, types_MOT, types_CHI, tokens_MOT, tokens_CHI)
 ```
 
 **5. Data merge**
@@ -190,7 +219,9 @@ It is important here to check if merging the data sets:
 - has resulted in the creation of NAs within the merged data set. If this is so, it is important to understand why these NAs were created (e.g. some measures were not taken at all visits, some recordings were lost or permission to use was withdrawn).
 
 ```{r merge_data}
-### Write your code here
+# Merging all the data frames together
+df_LU_token <- merge(LU_train, token_train)
+asd_df <- merge(df_LU_token, demo_train, by = c("subject", "visit"))
 
 
 ```
@@ -207,7 +238,22 @@ A possible way to do so:
 
 
 ```{r add_first_visit_variables}
-### Write your code here
+
+# Step 1: Create a new data set with only first visits
+first_visit_data <- asd_df %>% 
+  filter(visit == 1) %>% 
+    select(subject, ADOS, nonVerbalIQ, verbalIQ, Socialization)
+
+# Step 2: Rename the clinical variables to indicate the first visit
+first_visit_data <- first_visit_data %>% 
+  rename(ADOS1 = ADOS,
+         nonVerbalIQ1 = nonVerbalIQ,
+         verbalIQ1 = verbalIQ,
+         Socialization1 = Socialization)
+
+# Step 3: Merge the new data set with the old data
+merged_data <- asd_df %>% 
+  left_join(first_visit_data, by = "subject")
 
 
   
